@@ -1,4 +1,6 @@
 secrets.sh
+mcp-servers/*/
+!mcp-servers/.gitkeep
 **/node_modules/
 **/.venv/
 **/__pycache__/
