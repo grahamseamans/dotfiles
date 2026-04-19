@@ -114,8 +114,13 @@ Add language toolchains as needed. Examples from go-sequence's Dockerfile:
 
 - Go: download from `go.dev/dl` (arch-aware for arm64/amd64).
 - C/C++ native builds (e.g., for rtmidi): `build-essential pkg-config libasound2-dev`
-- Python: `python3 python3-pip`, or install `uv` via the astral.sh script
-  (note: add `astral.sh` to firewall whitelist if using the curl install).
+- **uv + python3: install in every container by default** (not just for
+  Python-based projects). Claude's python-runtime skill uses `uv run
+  --with <pkg>` for ad-hoc scripting / data exploration / one-off analysis.
+  Without it in the container, that whole workflow doesn't work. Install
+  via: `curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh`.
+  Also install `python3 python3-venv ca-certificates` via apt so uv has
+  a base Python and can fetch packages.
 
 ### `.devcontainer/init-firewall.sh`
 
