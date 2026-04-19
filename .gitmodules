@@ -1,0 +1,9 @@
+[submodule "mcp-servers/coworker_mcp"]
+	path = mcp-servers/coworker_mcp
+	url = https://github.com/grahamseamans/coworker_mcp.git
+[submodule "mcp-servers/mouser_mcp"]
+	path = mcp-servers/mouser_mcp
+	url = https://github.com/grahamseamans/ai_mouser_bom_tool.git
+[submodule "mcp-servers/digikey_mcp"]
+	path = mcp-servers/digikey_mcp
+	url = https://github.com/bengineer19/digikey_mcp.git
