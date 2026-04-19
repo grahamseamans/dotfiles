@@ -29,18 +29,13 @@ Then edit:
    - Replace the Go install block with your language's toolchain
    - Add any C/C++ build deps your project needs (`libasound2-dev` etc.)
 
-3. **`init-firewall.sh`**
-   - Add any new domains your project / its MCPs reach to the
-     `for domain in ...` list. Defaults cover GitHub, npm, Anthropic,
-     Go proxy, gitlab, xAI, VS Code marketplace.
-
-4. **Generate a scoped GitHub PAT for the new project**
+3. **Generate a scoped GitHub PAT for the new project**
    - https://github.com/settings/personal-access-tokens/new
    - Repository access: only the new repo
    - Contents + Pull requests (read/write)
    - Add to `~/.zshrc`: `export GITHUB_TOKEN_<YOUR_PROJECT>=ghp_...`
 
-5. **Open in VS Code → "Reopen in Container"**
+4. **Open in VS Code → "Reopen in Container"**
    - First build takes ~5 min
    - dotfiles auto-install on attach
    - Verify inside: `claude mcp list` + `gh api user`

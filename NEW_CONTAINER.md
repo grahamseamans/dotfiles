@@ -42,8 +42,6 @@ Copy the shape of `go-sequence/.devcontainer/` as a template. Three files:
       // + any per-language versions you need (Go, Python, etc.)
     }
   },
-  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],  // needed for firewall
-
   "customizations": {
     "vscode": {
       "extensions": [
@@ -85,9 +83,7 @@ Copy the shape of `go-sequence/.devcontainer/` as a template. Three files:
 
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",
-  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
-  "postAttachCommand": "cd ~/dotfiles && git pull --ff-only && ./install.sh",
-  "waitFor": "postStartCommand"
+  "postAttachCommand": "cd ~/dotfiles && git pull --ff-only && ./install.sh"
 }
 ```
 
@@ -122,26 +118,31 @@ Add language toolchains as needed. Examples from go-sequence's Dockerfile:
   Also install `python3 python3-venv ca-certificates` via apt so uv has
   a base Python and can fetch packages.
 
-### `.devcontainer/init-firewall.sh`
+### No outbound firewall
 
-Copy verbatim from go-sequence. Add any project-specific domains to the
-whitelist — the default set covers GitHub, npm, Anthropic, Go proxy, VS Code,
-gitlab.com, xAI. Gotchas:
+Earlier iterations had an iptables/ipset default-deny firewall running at
+container start. Dropped it. Rationale: auto-mode Claude needs arbitrary
+outbound fetch to do its job (Go modules, npm packages, docs, GitHub
+clones, etc.). Whitelisting becomes operational tax without meaningful
+security gain — attack vectors like "malicious npm package" already have
+the registry whitelisted anyway, and exfiltration via whitelisted
+endpoints (GitHub push to attacker repo) isn't prevented.
 
-- Use `ipset add -exist` (idempotent). Without `-exist`, overlapping IP
-  ranges (e.g., GitHub CIDRs + Google Cloud hosts) make the script fail on
-  second runs.
-- If an MCP hits a new domain, the firewall will silently block it. Check
-  with `docker exec <container> sudo /usr/local/bin/init-firewall.sh` and
-  watch for "Adding X for domain" lines to confirm all your hosts resolve.
+The sandbox's real protections are filesystem isolation (Docker keeps
+Claude in `/workspace` + volumes) and the scoped GitHub PAT (limits git
+damage to one repo). Those are kept.
+
+If you DO want the firewall for a particular project (e.g., sensitive
+secrets in the container, or a specific threat model), git log the
+go-sequence repo for the pre-removal versions — the `init-firewall.sh`
+script is preserved in history and can be re-added.
 
 ## What happens on "Reopen in Container"
 
 1. Docker builds image (or uses cache).
 2. Container starts.
-3. `postStartCommand` runs `init-firewall.sh` → iptables rules applied.
-4. VS Code clones dotfiles to `~/dotfiles` inside the container.
-5. VS Code runs `./install.sh` inside `~/dotfiles`:
+3. VS Code clones dotfiles to `~/dotfiles` inside the container.
+4. VS Code runs `./install.sh` inside `~/dotfiles`:
    - Symlinks `claude/{CLAUDE.md,settings.json,skills,hooks}` → `~/.claude/`
    - Initializes + npm-installs MCP submodules
    - Registers coworker (requires `XAI_API_KEY`), plus mouser / digikey if
@@ -153,7 +154,7 @@ gitlab.com, xAI. Gotchas:
 
 - **"Reopen in Container" vs "Rebuild Container"**: Reopen attaches to the
   existing container (no Dockerfile re-run). Rebuild tears down + recreates.
-  For changes to Dockerfile / firewall / devcontainer.json, always Rebuild.
+  For changes to Dockerfile / devcontainer.json, always Rebuild.
 - **Persistent Claude volume**: `~/.claude` is a named Docker volume, so it
   survives rebuilds. Good for auth persistence, bad when stale MCP configs
   from earlier setups shadow dotfiles-managed ones. If you see the wrong
@@ -196,8 +197,6 @@ script exits silently.
       `export GITHUB_TOKEN_<PROJECT>=ghp_...`
 - [ ] In devcontainer.json, change the GITHUB_TOKEN/GH_TOKEN forwards to
       reference `${localEnv:GITHUB_TOKEN_<PROJECT>}`
-- [ ] Add project-specific firewall domains to `init-firewall.sh` if the app
-      hits anything beyond GitHub/npm/Anthropic/standard Go proxy
 - [ ] Open in VS Code → "Reopen in Container" → wait for build
 - [ ] Inside container: `claude mcp list` → verify coworker connected
 - [ ] Inside container: `gh api user` → verify PAT works (returns your username)
