@@ -55,33 +55,57 @@ Copy the shape of `go-sequence/.devcontainer/` as a template. Three files:
 
   "remoteUser": "node",
   "mounts": [
-    "source=<project>-bashhistory-${devcontainerId},target=/commandhistory,type=volume",
-    "source=<project>-claude-config-${devcontainerId},target=/home/node/.claude,type=volume"
+    "source=${localWorkspaceFolderBasename}-bashhistory,target=/commandhistory,type=volume",
+    "source=${localWorkspaceFolderBasename}-claude-config,target=/home/node/.claude,type=volume"
     // + any language-specific caches (GOCACHE, .cargo, etc.)
   ],
 
   "containerEnv": {
     "CLAUDE_CONFIG_DIR": "/home/node/.claude",
-    "XAI_API_KEY": "${localEnv:XAI_API_KEY}"
-    // forward per-project PATs and MCP keys ONLY as needed:
-    // "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN_<PROJECT>}",
-    // "MOUSER_API_KEY": "${localEnv:MOUSER_API_KEY}"  // if project uses parts
+
+    // MCP keys: forward all of them everywhere. They're read-mostly
+    // personal API keys with low blast radius if leaked. Simpler than
+    // scoping per-project. install.sh skips MCPs whose keys are missing.
+    "XAI_API_KEY": "${localEnv:XAI_API_KEY}",
+    "MOUSER_API_KEY": "${localEnv:MOUSER_API_KEY}",
+    "DIGIKEY_CLIENT_ID": "${localEnv:DIGIKEY_CLIENT_ID}",
+    "DIGIKEY_CLIENT_SECRET": "${localEnv:DIGIKEY_CLIENT_SECRET}",
+    "DIGIKEY_USE_SANDBOX": "${localEnv:DIGIKEY_USE_SANDBOX}",
+    "WEATHER_LAT": "${localEnv:WEATHER_LAT}",
+    "WEATHER_LON": "${localEnv:WEATHER_LON}",
+
+    // GitHub PAT: SCOPED per project. A PAT grants write access to repos,
+    // so a compromised container = blast radius of every repo the PAT can
+    // touch. Generate a fine-grained PAT scoped to ONLY this project's
+    // repo, store as GITHUB_TOKEN_<PROJECT> in your shell, forward as
+    // both GITHUB_TOKEN (git default) and GH_TOKEN (gh CLI default).
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN_<PROJECT>}",
+    "GH_TOKEN":     "${localEnv:GITHUB_TOKEN_<PROJECT>}"
   },
 
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",
   "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
+  "postAttachCommand": "cd ~/dotfiles && git pull --ff-only && ./install.sh",
   "waitFor": "postStartCommand"
 }
 ```
 
 **Key rules:**
-- Name mounts with the project prefix so volumes don't collide across projects.
-- Only forward env vars the project actually needs. Each project gets its
-  own scoped GitHub PAT. One compromised container = one repo's blast radius.
-- `containerEnv` keys that reference unset `${localEnv:FOO}` → VS Code may
-  prompt or leave them empty; dotfiles install.sh handles missing keys
-  gracefully for optional MCPs.
+- Mount names use `${localWorkspaceFolderBasename}` (stable, documented).
+  NOT `${devcontainerId}` (undocumented hash, may change across VS Code
+  versions and silently lose your volumes).
+- **MCP keys: forward all everywhere.** They're personal read-mostly API
+  keys; the marginal risk of having them in N containers vs 1 is ~zero.
+- **GitHub PATs: scoped per project, ALWAYS.** Real write-capable
+  credentials. Generate a fine-grained PAT per repo. Forward only the
+  one this project needs.
+- `${localEnv:FOO}` resolves at container creation. If unset on host →
+  forwarded as empty string → install.sh's optional-MCP checks skip
+  gracefully. Required vars (XAI_API_KEY) → install.sh exits with error.
+- `postAttachCommand` re-syncs dotfiles + reruns install.sh on every
+  container attach. Means MCPs always-latest, env always matches what's
+  declared in dotfiles.
 
 ### `.devcontainer/Dockerfile`
 
@@ -133,9 +157,9 @@ gitlab.com, xAI. Gotchas:
 - **Missing env var stops install.sh**: install.sh requires `XAI_API_KEY`.
   Other keys are optional. If your shell env doesn't have `XAI_API_KEY`,
   VS Code passes an empty string and install fails.
-- **Submodule clones need public repos or container auth**: dotfiles'
-  submodules must be public, OR you need to forward a GitHub token into
-  the container for the clone step.
+- **MCP repos must be public** (or forward a GitHub token into the
+  container so install.sh can clone them). install.sh's `sync_repo` step
+  uses HTTPS clones, no auth by default.
 - **MIDI / USB / audio hardware**: Docker Desktop on macOS can't pass
   through USB/MIDI devices. Containers are for code/tests only; run the
   app on the host for hardware integration.
@@ -158,14 +182,30 @@ script exits silently.
 
 ## Checklist for a new project
 
-- [ ] Copy `.devcontainer/` from an existing project
-- [ ] Update `name`, `mounts` prefix, Dockerfile language toolchains
-- [ ] Adjust `containerEnv` — forward only what this project needs
+- [ ] Copy `.devcontainer/` from an existing project (go-sequence is a
+      good template)
+- [ ] Update `name` in devcontainer.json
+- [ ] Update Dockerfile for language toolchains this project needs
+- [ ] Generate a scoped GitHub PAT for this repo (only Contents +
+      PullRequests write on just this repo). Add to `~/.zshrc`:
+      `export GITHUB_TOKEN_<PROJECT>=ghp_...`
+- [ ] In devcontainer.json, change the GITHUB_TOKEN/GH_TOKEN forwards to
+      reference `${localEnv:GITHUB_TOKEN_<PROJECT>}`
 - [ ] Add project-specific firewall domains to `init-firewall.sh` if the app
       hits anything beyond GitHub/npm/Anthropic/standard Go proxy
-- [ ] If a private GitHub repo is needed, create a scoped PAT and add to
-      `~/.zshrc`: `export GITHUB_TOKEN_<PROJECT>=ghp_...`
 - [ ] Open in VS Code → "Reopen in Container" → wait for build
 - [ ] Inside container: `claude mcp list` → verify coworker connected
+- [ ] Inside container: `gh api user` → verify PAT works (returns your username)
 - [ ] Inside container: `claude` → ask "which Grok model do you use?" → confirm
       it answers `grok-4-1-fast-reasoning` (proves skills loaded)
+
+## Future considerations
+
+**Nix flakes + devshell** — fully declarative reproducibility across machines,
+no Docker needed for the tool-versioning concern. Each project gets a
+`flake.nix` that pins exact versions of Go/Node/Python/uv/etc. The auto-mode
+sandboxing still wants Docker, so the mature pattern is *Nix inside the
+devcontainer*: Dockerfile shrinks to "install Nix", the flake handles
+everything else. Real week-plus learning curve though (flake syntax, lazy
+eval, etc.). Worth doing once you have >3 personal projects hitting this
+"containers are great but pinning versions everywhere is a pain" wall.
