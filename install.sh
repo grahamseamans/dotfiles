@@ -59,11 +59,15 @@ echo "✓ Claude config symlinked"
 # ─────────── Register coworker MCP (Grok) ───────────
 COWORKER_DIR="$DOTFILES/mcp-servers/coworker_mcp"
 if command -v node >/dev/null 2>&1 && [ -d "$COWORKER_DIR" ]; then
+    # dist/ is gitignored upstream; build if missing
     if [ ! -d "$COWORKER_DIR/node_modules" ]; then
-        (cd "$COWORKER_DIR" && npm install --omit=dev --silent) 2>&1 | tail -3
+        (cd "$COWORKER_DIR" && npm install --silent) 2>&1 | tail -3
     fi
-    claude mcp remove coworker 2>/dev/null || true
-    claude mcp add coworker --env XAI_API_KEY="$XAI_API_KEY" \
+    if [ ! -f "$COWORKER_DIR/dist/index.js" ]; then
+        (cd "$COWORKER_DIR" && npm run build --silent) 2>&1 | tail -3
+    fi
+    claude mcp remove coworker --scope user 2>/dev/null || true
+    claude mcp add coworker --scope user --env XAI_API_KEY="$XAI_API_KEY" \
         -- node "$COWORKER_DIR/dist/index.js" >/dev/null
     echo "✓ coworker MCP registered"
 else
@@ -79,8 +83,8 @@ if command -v node >/dev/null 2>&1 && [ -d "$MOUSER_DIR" ] && [ -n "${MOUSER_API
     if [ ! -d "$MOUSER_DIR/dist" ]; then
         (cd "$MOUSER_DIR" && npm run build --silent) 2>&1 | tail -3
     fi
-    claude mcp remove mouser 2>/dev/null || true
-    claude mcp add mouser --env MOUSER_API_KEY="$MOUSER_API_KEY" \
+    claude mcp remove mouser --scope user 2>/dev/null || true
+    claude mcp add mouser --scope user --env MOUSER_API_KEY="$MOUSER_API_KEY" \
         -- node "$MOUSER_DIR/dist/index.js" >/dev/null
     echo "✓ mouser MCP registered"
 elif [ -z "${MOUSER_API_KEY:-}" ]; then
@@ -91,8 +95,8 @@ fi
 DIGIKEY_DIR="$DOTFILES/mcp-servers/digikey_mcp"
 if command -v uv >/dev/null 2>&1 && [ -d "$DIGIKEY_DIR" ] \
     && [ -n "${DIGIKEY_CLIENT_ID:-}" ] && [ -n "${DIGIKEY_CLIENT_SECRET:-}" ]; then
-    claude mcp remove digikey 2>/dev/null || true
-    claude mcp add digikey \
+    claude mcp remove digikey --scope user 2>/dev/null || true
+    claude mcp add digikey --scope user \
         --env CLIENT_ID="$DIGIKEY_CLIENT_ID" \
         --env CLIENT_SECRET="$DIGIKEY_CLIENT_SECRET" \
         --env USE_SANDBOX="${DIGIKEY_USE_SANDBOX:-false}" \
