@@ -97,3 +97,9 @@ spend tiem making realy good variable names!
 talk with the user about this!
 Variable names should be self documenting, so they need to be specific, and are generally pretty long.
 When code gets reworked and has 
+
+there are a few different type of refactors
+1 ) safe refactors, you basically want to keep things as they are, change as little as possible to get it as close to the new spec as possible
+2 ) medium, you want to change it a fair bit, but you need to keep migration in mind and dont want to change stuff to much incase it breaks
+3) hard core, you rip the old code out by the spine, define what funciton signatures to write that would lead to cleanest codebase, write that instead, maybe keeping old stuff if it fits perfectly as is in the new architecture, otherwise rip and and rewrite. you care about migration later, if at all
+ALWAYS ask which of these is the intened ferocity of refactor when changing code to fit a new spec!

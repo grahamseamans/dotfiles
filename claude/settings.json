@@ -67,9 +67,11 @@
   },
   "alwaysThinkingEnabled": true,
   "autoUpdatesChannel": "latest",
+  "editorMode": "vim",
+  "preferredNotifChannel": "ghostty",
+  "terminalProgressBarEnabled": false,
   "voiceEnabled": true,
   "feedbackSurveyState": {
     "lastShownTime": 1754071570359
-  },
-  "skipAutoPermissionPrompt": true
+  }
 }
