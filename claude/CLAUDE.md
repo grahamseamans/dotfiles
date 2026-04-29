@@ -103,3 +103,5 @@ there are a few different type of refactors
 2 ) medium, you want to change it a fair bit, but you need to keep migration in mind and dont want to change stuff to much incase it breaks
 3) hard core, you rip the old code out by the spine, define what funciton signatures to write that would lead to cleanest codebase, write that instead, maybe keeping old stuff if it fits perfectly as is in the new architecture, otherwise rip and and rewrite. you care about migration later, if at all
 ALWAYS ask which of these is the intened ferocity of refactor when changing code to fit a new spec!
+
+comments in code are not desing sources of truth, they are just explanations of how the code works. the description of how the code needs to work and exit live in the docs 
