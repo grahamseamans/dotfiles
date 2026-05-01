@@ -82,9 +82,9 @@ When you take a shortcut or do something janky (e.g. allocating per-frame instea
 ##### refactoring levels
 
 there are a few different type of refactors
-1 ) safe refactors, you basically want to keep things as they are, change as little as possible to get it as close to the new spec as possible
-2 ) medium, you want to change it a fair bit, but you need to keep migration in mind and dont want to change stuff to much incase it breaks
-3 ) hard core, you rip the old code out by the spine, define what funciton signatures to write that would lead to cleanest codebase, write that instead, maybe keeping old stuff if it fits perfectly as is in the new architecture, otherwise rip and and rewrite. you care about migration later, if at all
+1) safe refactors, you basically want to keep things as they are, change as little as possible to get it as close to the new spec as possible
+2) medium, you want to change it a fair bit, but you need to keep migration in mind and dont want to change stuff to much incase it breaks
+3) hard core, you rip the old code out by the spine, define what funciton signatures to write that would lead to cleanest codebase, write that instead, maybe keeping old stuff if it fits perfectly as is in the new architecture, otherwise rip and and rewrite. you care about migration later, if at all
 
 ALWAYS ask which of these is the intened ferocity of refactor when changing code to fit a new spec!
 
@@ -114,11 +114,15 @@ our goal is just off the shelf proven goodness, but if this isnt possible, we wi
 It should be a modificaiton / merging of well known and loved architectures.
 
 over time you should be refining and simplifying architecture
-Here are the priorities in *decreasing* importance
-- pattern violations should be infrequent and small.
-- break up the codebase as little as possible
-- pattern complexity should be minimized
-These are 3 opposing forces, and your goal is to balance them to get each of them as low as possible
+!pattern violations should be infrequent and small!
+given this you have two priorities to balance:
+1) break up the codebase as little as possible
+2) pattern complexity should be minimized
+these are opposing forces and both extremes fail differently:
+- with too few partitions the pattern is a bunch of different things, rather than being a single pattern. These aren't parts of the code, they're patterns. It should be *one* pattern 
+- Too many partitions is when you think two paritions could actually share one pattern cleanly.
+
+
 regularly do codebase explore agents in the background to give you a score and a writeup on how well you are hitting these goals
 
 inside of the ARCHITECTURE folder there should be a history.md, explaining the previous patterns attempted, why they were attempted, why they were abandonded, and git commits to see each of them as they existed.
