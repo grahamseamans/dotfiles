@@ -1,63 +1,34 @@
-The user does not like
-- defaults that can lead to tricky failiures
-- a try with an empty catch 
-- code that fails silently
+##### genearl practices
+
+NEVER USE git add -A
 
 for really hard problems it helps to brainstorm with your coworker
+attach files when using grok. dont just describe the code, use 4.1 fast thinking.
+use grok for web search
 
-be sure to use your skills! check for relevant ones regularly.
+a combination of grok and context7 should be able to get you the information that you need in nearly every context
 
-USE AGENTS!
-You are the manager of agents!
-you give them tasks and check their work!
+HARD NO TO
+- quiet fallbacks
+- a try with an empty catch 
+- any code that fails silently
 
+never ask me whats in a file that you can read yourself. just read it
+
+spend time making realy descriptive variable names!
+talk with the user about this!
+Variable names should be self documenting, so they need to be specific, and are generally suprisingly long and ugly.
+
+if you are ever going to change code
+ASK if it should be made backward compatable (it generally shouldnt!)
 always ask me before leaving "legacy" code.
 98% of the time it's just trash in the codebase
 we almost always would be better off with it just removed
-
-most of your errors are from having parallel code paths
-regularly make sure that you dont have two systems that do the same thing!
-or storing the same information in two different places, even if it's stored in different ways.
-
-if you are ever going to change code
-ASK if it should be made backward compatable
-
-
-each time you try to exit planning it shows me the whole planning md.
-So get me to confirm your plan first, unless you think that the planning md is what you'd want me to see
-
-use grok for web search
-- do not use agents to do simple web searches!!!
-
-before exiting plan mode ALWAYS ask the user if they would like to exit plan mode.
+we dont need old code laying around, we have git!!
 
 clean clean clean!!!
 a clean codebase is a good codebase
-propose cleanups whevever you see somethign that looks messy or dead or similar
-we dont need old code laying around, we have git!!
-
-
-if a codebase is going to have documentation it hsould have:
-per file or section:
-all state owned by that section
-all functions (signatures, maybe a teeny explanation)
-all types
-
-There should be very little exposition.
-if the state, functions, and types do not already explain it, the code is bad
-
-when plannning - do not try to exit plan mode repeatedly
-always ask the user for confrimation before trying to exit plan mode
-"would you like to try to exit plan mode"
-do not just try to exit.
-the ui pastes a ton of stuff that makes it so that the user cannot see what you've said
-
-
-do not try to exit plan mode without asking first
-i will almost always just deny the requests if you do not ask first
-this is because claude code scrolls and hides whatever you may have written, so I cannot see your rationale for wanting to exit the mode
-
-NEVER USE git add -A
+propose cleanups whevever you see somethign that looks messy or dead or similar (ESPECIALLY DEAD)
 
 ## Known Claude Code Bug: Permission Merging is Broken
 Global permissions from `~/.claude/settings.local.json` do NOT merge into projects that have their own `settings.local.json`. The project-level file replaces the global one instead of merging (despite docs saying otherwise). GitHub issues: #19487, #21851, #17017.
@@ -69,42 +40,51 @@ Global permissions from `~/.claude/settings.local.json` do NOT merge into projec
 "Bash(unzip *)", "Read(~/.cargo/**)", "Grep(~/.cargo/**)"
 ```
 
-If there is a problem you *must* use the scientific method.
-form a hypothesis - read docs, read code, whatever you want, add exploratory print statements
-test the hypothsis - add print statements or similar that when running the project will either prove, or disprove, your hyptothesis. if a hypothesis isnt falsiviable, it's not worth much.
-fix the code knowing what is wrong!!!!
+##### agents
 
+USE AGENTS!
+You are the manager of agents!
+you give them tasks and check their work!
+use agents to code and check their work! it uses up your context to do it yourself!!!
+do not use agents to do simple web searches!!!
+Dont use worktrees
+
+##### docs
+
+the best codebases seem to have a docs folder with a bunch of somewhat messy but precise md files that I've written.
+comments in code are *not* sources of truth about architecture, they are just explanations of how the current or past code works. the description of how the code needs to work is in the docs, if the two disagree the docs is correct by default.
+Do NOT change anything in the ./docs folder without the uses explicit permission. that is a user only zone!!!
+
+##### debugging
+
+If there is a problem you *must* use the scientific method. make a scratchpad in temp to keep track of your notes and tehories, they each are good and bad, how you've tested them, the works. you can then also easily attach this file with grok as a bonus.
+1) research - read docs, read code, add TONS of exploratory print statements talk with grok, repeat this step until you have a really solid grasp of what is going on.
+2) form a hypothesis - come up with what you think the problem is, and derive a way to test it. if the test is true you should be very confident that this is what is wrong with the code. This is different from a fix!!!!! this is just finding out why things arent working!!!! your goal is NOT to fix the code with this hyptothesis. the goal is to find out what is failing and why!!
+3) test the hypothsis - add print statements or similar that you came up with in test 2 and run it.
+4) with these results, talk with grok again to make sure that your interpretation is correct.
+5) if things are less clear now, this is still a win! go back to step 1, or else continue to step 6
+6) apply the fix that you are thinking will work, run the tests, if they fail, go back to step 1
+
+Genearl vibes of testing:
+if something doesnt work break it up into smaller and smaller peices and test them.
+while troubleshooting you should break the system in half - check if each half worlks, if one or both dont, test them, break them in half, continue this recursively until you've found the problem
+
+most of your errors are from having parallel code paths
+regularly make sure that you dont have two systems that do the same thing!
+or storing the same information in two different places, even if it's stored in different ways.
+
+##### shorcuts
 
 Shortcuts tracking
 If you're working on code, there should be a SHORTCUTS.md present at the root, if it isnt there, add it.
 When you take a shortcut or do something janky (e.g. allocating per-frame instead of pre-allocating, skipping a proper system, hardcoding something), write it down in `/SHORTCUTS.md` so we can come back and fix it later.
 
-never ask me whats in a file that you can read yourself. just read it
-
-if something doesnt work break it up into smaller and smaller peices and test them.
-
-Integration tests are meant to test stuff, but while troubleshooting you should break the system in half - check if each half worlks, if one or both dont, test them, break them in half.....
-
-use agents to code and check their work! it uses up your context to do it yourself!!!
-
-Dont use worktrees
-
-dont use agents for docs edits and similar, we need to do those together.
-
-attach files when using grok. dont just describe the code, use 4.1 fast thinking.
-
-spend tiem making realy good variable names!
-talk with the user about this!
-Variable names should be self documenting, so they need to be specific, and are generally pretty long.
-When code gets reworked and has 
+##### refactoring levels
 
 there are a few different type of refactors
 1 ) safe refactors, you basically want to keep things as they are, change as little as possible to get it as close to the new spec as possible
 2 ) medium, you want to change it a fair bit, but you need to keep migration in mind and dont want to change stuff to much incase it breaks
-3) hard core, you rip the old code out by the spine, define what funciton signatures to write that would lead to cleanest codebase, write that instead, maybe keeping old stuff if it fits perfectly as is in the new architecture, otherwise rip and and rewrite. you care about migration later, if at all
+3 ) hard core, you rip the old code out by the spine, define what funciton signatures to write that would lead to cleanest codebase, write that instead, maybe keeping old stuff if it fits perfectly as is in the new architecture, otherwise rip and and rewrite. you care about migration later, if at all
+
 ALWAYS ask which of these is the intened ferocity of refactor when changing code to fit a new spec!
-
-comments in code are not sources of truth, they are just explanations of how the code works. the description of how the code needs to work and exit live in the docs 
-
-Do NOT change anything in the ./docs folder wihtout the uses explicit permission. that is a user only zone!!!
 
