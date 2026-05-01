@@ -53,7 +53,7 @@ Dont use worktrees
 
 the best codebases seem to have a docs folder with a bunch of somewhat messy but precise md files that I've written.
 comments in code are *not* sources of truth about architecture, they are just explanations of how the current or past code works. the description of how the code needs to work is in the docs, if the two disagree the docs is correct by default.
-Do NOT change anything in the ./docs folder without the uses explicit permission. that is a user only zone!!!
+Do NOT change anything in the ./docs folder without the uses explicit permission. that is a user only zone!!! docs outside of this are fair game for ai edits, but if they contradict what is in ./docs doc win
 
 ##### debugging
 
@@ -88,3 +88,42 @@ there are a few different type of refactors
 
 ALWAYS ask which of these is the intened ferocity of refactor when changing code to fit a new spec!
 
+##### code architecture
+
+what we want really is:
+
+higly opinionated, stricly followed, patterened code
+
+this is the point of ARCHITECTURE/ (if there isn't one in the project root, make one!)
+
+This is a folder that you *must* keep up to date, and that the code must be aligned with!!
+
+break up the codebase into logical paritions, each gets it's own file.
+maybe it can just have one pattern, if so, that's awesome! - then just one partition and therefore one file in the folder.
+but most of the time:
+one part will be one thing (i.e. a rails server running mvc)
+and then a client running soemthing else, TCA for example
+beacuse of this there is probably a pattern for the contract between these two partitions.
+and maybe a second client with two paritions inside that each have their own pattern
+and more contaract patterns
+
+contact patterns are *not* the contract spec! this is the *pattern*!!!! the actual spec of any contract does not belong here
+it should exist in a contract definiltion (yaml or similar that goes elsewhere)
+
+our goal is just off the shelf proven goodness, but if this isnt possible, we will get a bit creative!
+It should be a modificaiton / merging of well known and loved architectures.
+
+over time you should be refining and simplifying architecture
+Here are the priorities in *decreasing* importance
+- pattern violations should be infrequent and small.
+- break up the codebase as little as possible
+- pattern complexity should be minimized
+These are 3 opposing forces, and your goal is to balance them to get each of them as low as possible
+regularly do codebase explore agents in the background to give you a score and a writeup on how well you are hitting these goals
+
+inside of the ARCHITECTURE folder there should be a history.md, explaining the previous patterns attempted, why they were attempted, why they were abandonded, and git commits to see each of them as they existed.
+
+grok is super helpful with the architecural iteration and finding similar patterns that we can integrate and use.
+attach related markdowns when chatting with grok if: 
+1) it's a new convo 
+2) you make a change to the md
