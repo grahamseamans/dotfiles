@@ -40,6 +40,17 @@ Global permissions from `~/.claude/settings.local.json` do NOT merge into projec
 "Bash(unzip *)", "Read(~/.cargo/**)", "Grep(~/.cargo/**)"
 ```
 
+##### objective information
+
+you do have a lot of information stored in your weights which is awesome. but. It's not that precise, nor can it be, as the way that both of us work is funtamentally statistical. Because of this when you want to "know" somehing I want you to look for sources. 
+I'd like grok to be the primary source of this. depending on the query I want you to:
+- ask grok to see if they can find you the informations with reciepts.
+- get download links to sources like pdf's and similar for what you're looking for from grok. then you can curl them and read the source yourself.
+
+For code, along with grok, context7 is really great.
+
+The overall point is that we're machines that can try to spot flaws and inconsistencies and be generative with what we have at our disposal, but that we do not actually store information particulary well. That is why we write stuff down and have records. As such, we should almost always look to gather sources to inform and check our opinions.
+
 ##### agents
 
 USE AGENTS!
